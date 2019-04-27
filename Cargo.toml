@@ -5,3 +5,4 @@ authors = ["Matthew Forrester <matthew.forrester@speechmarks.com>"]
 edition = "2018"
 
 [dependencies]
+csv = "1"
