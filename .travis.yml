@@ -25,6 +25,12 @@ matrix:
 before_install:
   - export PATH="$PATH:$HOME/.cargo/bin"
 
+before_script:
+  - rustup component add clippy
+
+lint:
+  - cargo clippy -- -D warnings
+
 test:
   - cargo test
 

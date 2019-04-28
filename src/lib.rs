@@ -27,7 +27,7 @@ impl<R: Read> ReaderFrom<R> {
         let mut read_count = 999;
         let mut process_buffer = vec![];
 
-        fn count_seperators(field_seperator: u8, line: &String) -> usize {
+        fn count_seperators(field_seperator: u8, line: &str) -> usize {
 
             let mut rdr = ReaderBuilder::new()
                 .delimiter(field_seperator)
@@ -36,7 +36,7 @@ impl<R: Read> ReaderFrom<R> {
 
             match rdr.records().next() {
                 Some(rec) => {
-                    return rec.unwrap_or(csv::StringRecord::new()).len();
+                    rec.unwrap_or_default().len()
                 }
                 None => 0
             }
@@ -51,7 +51,7 @@ impl<R: Read> ReaderFrom<R> {
             }
         }
 
-        let max = (&process_buffer).into_iter().fold(
+        let max = (&process_buffer).iter().fold(
             BufferAcc { count: 0, current_line: 0, max_line: 0 },
             |acc, line| {
                 let c = count_seperators(
@@ -61,11 +61,11 @@ impl<R: Read> ReaderFrom<R> {
                 if c <= acc.count {
                     return BufferAcc { current_line: acc.current_line + 1, ..acc };
                 }
-                return BufferAcc {
+                BufferAcc {
                     count: c,
                     current_line: acc.current_line + 1,
                     max_line: acc.current_line
-                };
+                }
             }
         );
 
@@ -73,7 +73,7 @@ impl<R: Read> ReaderFrom<R> {
             self.buffer.push(process_buffer.remove(max.max_line).as_bytes().to_vec());
         }
 
-        return Result::Ok(self.buffer.len());
+        Result::Ok(self.buffer.len())
 
     }
 
@@ -86,24 +86,25 @@ impl<R: Read> ReaderFrom<R> {
             count = return_buf.len();
             shift = false;
         }
-        for i in 0..count {
-            return_buf[i] = as_bytes[i];
-        }
+
+        return_buf[..count].clone_from_slice(&as_bytes[..count]);
+
         if !shift {
             self.buffer.insert(0, as_bytes[count..].to_vec());
         }
-        return Result::Ok(count);
+
+        Result::Ok(count)
     }
 
 
     pub fn new(reader: R, field_seperator: u8, consider_lines: usize) -> ReaderFrom<R> {
-        return  ReaderFrom {
+        ReaderFrom {
             rdr: BufReader::new(reader),
             field_seperator,
             buffer: vec![],
             prepared: false,
             consider_lines
-        };
+        }
     }
 
 }
@@ -118,10 +119,11 @@ impl<R: Read> std::io::Read for ReaderFrom<R> {
             self.prepared = true;
         }
 
-        if self.buffer.len() > 0 {
-            return self.read_from_buffer(return_buf);
+        if self.buffer.is_empty() {
+            return self.rdr.read(return_buf);
         }
-        return self.rdr.read(return_buf);
+
+        self.read_from_buffer(return_buf)
 
     }
 
