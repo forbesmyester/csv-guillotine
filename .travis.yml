@@ -16,10 +16,10 @@ matrix:
       rust: stable
       env: TARGET=x86_64-unknown-linux-musl
     - os: linux
-      rust: 1.28.0
+      rust: 1.34.1
       env: TARGET=x86_64-unknown-linux-gnu
     - os: linux
-      rust: 1.28.0
+      rust: 1.34.1
       env: TARGET=x86_64-unknown-linux-musl
 
 before_install:
