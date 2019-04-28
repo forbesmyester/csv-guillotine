@@ -1,0 +1,44 @@
+language: rust
+cache: cargo
+
+env:
+  global:
+    - PROJECT_NAME=csv-guillotine
+matrix:
+  include:
+    - os: linux
+      rust: stable
+      env: TARGET=i686-unknown-linux-musl
+    - os: osx
+      rust: stable
+      env: TARGET=x86_64-apple-darwin
+    - os: linux
+      rust: stable
+      env: TARGET=x86_64-unknown-linux-musl
+    - os: linux
+      rust: 1.28.0
+      env: TARGET=x86_64-unknown-linux-gnu
+    - os: linux
+      rust: 1.28.0
+      env: TARGET=x86_64-unknown-linux-musl
+
+before_install:
+  - export PATH="$PATH:$HOME/.cargo/bin"
+
+install:
+  - bash ci/install.sh
+
+script:
+  - bash ci/script.sh
+
+test:
+  - cargo test
+
+branches:
+  only:
+    - master
+    - /^\d+\.\d+\.\d+.*$/
+
+notifications:
+  email:
+on_success: never

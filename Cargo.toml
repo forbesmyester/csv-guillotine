@@ -1,5 +1,5 @@
 [package]
-name = "reader-from"
+name = "csv-guillotine"
 version = "0.1.0"
 authors = ["Matthew Forrester <matthew.forrester@speechmarks.com>"]
 edition = "2018"
