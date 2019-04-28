@@ -1,5 +1,7 @@
 # CSV Guillotine
 
+[![Build Status](https://travis-ci.com/forbesmyester/csv-guillotine.svg?branch=master)](https://travis-ci.com/forbesmyester/csv-guillotine)
+
 Often, banks, stockbrokers and other large institutions will offer a feature to download your account history in a CSV. This is good and to be applauded but they often include an extra metadata header at the top of the file explaining what the file is. It may look like the following:
 
     Account:,****07493
