@@ -3,8 +3,7 @@ extern crate csv;
 use std::io::{BufRead,BufReader,Read};
 use csv::ReaderBuilder;
 
-
-pub struct ReaderFrom<R> {
+pub struct Blade<R> {
     rdr: std::io::BufReader<R>,
     field_seperator: u8,
     buffer: Vec<Vec<u8>>,
@@ -20,7 +19,7 @@ struct BufferAcc {
 }
 
 
-impl<R: Read> ReaderFrom<R> {
+impl<R: Read> Blade<R> {
 
     fn prepare(&mut self) -> Result<usize, std::io::Error> {
 
@@ -97,8 +96,8 @@ impl<R: Read> ReaderFrom<R> {
     }
 
 
-    pub fn new(reader: R, field_seperator: u8, consider_lines: usize) -> ReaderFrom<R> {
-        ReaderFrom {
+    pub fn new(reader: R, field_seperator: u8, consider_lines: usize) -> Blade<R> {
+        return  Blade {
             rdr: BufReader::new(reader),
             field_seperator,
             buffer: vec![],
@@ -110,7 +109,7 @@ impl<R: Read> ReaderFrom<R> {
 }
 
 
-impl<R: Read> std::io::Read for ReaderFrom<R> {
+impl<R: Read> std::io::Read for Blade<R> {
 
     fn read(&mut self, return_buf: &mut [u8]) -> Result<usize, std::io::Error> {
 
@@ -210,7 +209,7 @@ mod tests {
             "freddy,19,M".to_string()
         ];
         let fr = FakeCsvReader::new(csv.join("\n"));
-        let rf = super::ReaderFrom::new(fr, 44, 20);
+        let rf = super::Blade::new(fr, 44, 20);
         let mut br = BufReader::new(rf);
         let mut buffer = String::new();
 
@@ -237,7 +236,7 @@ mod tests {
             "freddy,19,M".to_string()
         ];
         let fr = FakeCsvReader::new(csv.join("\n"));
-        let rf = super::ReaderFrom::new(fr, 44, 3);
+        let rf = super::Blade::new(fr, 44, 3);
         let mut br = BufReader::new(rf);
         let mut buffer = String::new();
 
