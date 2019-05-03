@@ -97,7 +97,7 @@ impl<R: Read> Blade<R> {
 
 
     pub fn new(reader: R, field_seperator: u8, consider_lines: usize) -> Blade<R> {
-        return  Blade {
+        Blade {
             rdr: BufReader::new(reader),
             field_seperator,
             buffer: vec![],

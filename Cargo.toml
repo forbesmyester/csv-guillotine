@@ -1,8 +1,9 @@
 [package]
 name = "csv-guillotine"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Matthew Forrester <matthew.forrester@speechmarks.com>"]
 edition = "2018"
 
 [dependencies]
 csv = "1"
+argparse = "0.2.2"
