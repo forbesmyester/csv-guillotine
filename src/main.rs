@@ -1,9 +1,12 @@
 extern crate argparse;
 use std::io::Write;
-use std::io::{Read, BufRead, BufReader};
+use std::io::{Read, BufReader};
 use std::fs::File;
 mod lib;
 use argparse::{ArgumentParser, Store, StoreOption};
+
+#[cfg(test)]
+use std::io::BufRead;
 
 fn main() {
 
@@ -71,28 +74,25 @@ fn main() {
         }
     };
 
-    let blade = lib::Blade::new(stdin, separator, consider);
-    let mut buf_reader = BufReader::new(blade);
+    let mut rdr = lib::Blade::new(stdin, separator, consider);
+    // let mut buf_reader = BufReader::new(blade);
 
     let mut exit_code = 0;
     let mut read_size = 1;
 
     while (exit_code == 0) && (read_size != 0) {
-        let mut buffer = String::new();
+        let mut buffer = [0; 1024];
 
-        let to_write = match buf_reader.read_line(&mut buffer) {
-            Ok(r) => {
-                read_size = r;
-                buffer.as_bytes()
-            },
+        read_size = match rdr.read(&mut buffer) {
+            Ok(r) => r,
             Err(e) => {
                 exit_code = 1;
                 eprintln!("ERROR READING: {}", e);
-                &[]
+                0
             }
         };
 
-        match stdout.write(to_write) {
+        match stdout.write(&buffer[..read_size]) {
             Ok(_w) => (),
             Err(e) => {
                 exit_code = 1;

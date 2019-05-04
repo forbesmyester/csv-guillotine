@@ -4,12 +4,14 @@ set -euo pipefail
 IFS=$'\n\t'
 
 cargo clean
-RUSTFLAGS='-D warnings' cargo build
 cargo clippy
 cargo test
+
+RUSTFLAGS='-D warnings' cargo build
 
 cat res/test/sample.csv | ./target/debug/csv-guillotine > _processed.csv
 diff res/test/expected.csv _processed.csv
 
 ./target/debug/csv-guillotine -i res/test/sample.csv -o _processed.csv
 diff res/test/expected.csv _processed.csv
+

@@ -44,7 +44,7 @@ NOTE: This software makes no attempt to actually validate that your CSV.
 
 ## Library Usage
 
-This library exposes a `Blade` class which is constructed with a [`BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html) as well as a character (expressed as a u8) and a line limit. The `Blade` class can be used as a [`Read`](https://doc.rust-lang.org/std/io/trait.Read.html) to get the actual data out.
+This library exposes a `Blade` class which is constructed with a [`Read](https://doc.rust-lang.org/std/io/trait.Read.html) as well as a character (expressed as a u8) and a line limit. The `Blade` class can be used as a `Read` to get the actual data out.
 
 Example below:
 
@@ -72,3 +72,10 @@ Example below:
         }
 
     }
+
+## Versions
+
+ * 0.1.0 - Initial version
+ * 0.1.1 - Rename main class to Blade to keep with the guillotine theme
+ * 0.2.0 - Add a command line program
+ * 0.3.0 - Use bytes instead of String for everything so it can process non UTF8 files.
