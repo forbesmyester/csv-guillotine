@@ -24,17 +24,23 @@ This library is a form of buffer which removes this metadata header. It does thi
 
 To compile install rust from [rustup](https://rustup.rs/), check out this repository and run:
 
+```bash
     cargo install --path .
+```
 
 ## Command Line Usage
 
 This can be used like the following:
 
+```bash
     cat with_metadata_headers.csv | csv-guillotine --separator=',' --consider=20 > csv_header_and_data only.csv
+```
 
 or 
 
+```bash
     csv-guillotine -i with_metadata_headers.csv -o csv_header_and_data only.csv
+```
 
 see `csv-guillotine --help` for full usage instructions
 
@@ -48,6 +54,7 @@ This library exposes a `Blade` class which is constructed with a [`Read](https:/
 
 Example below:
 
+```rust
     use std::io::{BufRead, BufReader};
     mod lib;
 
@@ -72,6 +79,7 @@ Example below:
         }
 
     }
+```
 
 ## Versions
 
