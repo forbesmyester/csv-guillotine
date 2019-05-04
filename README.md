@@ -50,7 +50,7 @@ NOTE: This software makes no attempt to actually validate that your CSV.
 
 ## Library Usage
 
-This library exposes a `Blade` class which is constructed with a [`Read](https://doc.rust-lang.org/std/io/trait.Read.html) as well as a character (expressed as a u8) and a line limit. The `Blade` class can be used as a `Read` to get the actual data out.
+This library exposes a `Blade` class which is constructed with a [`Read`](https://doc.rust-lang.org/std/io/trait.Read.html) as well as a character (expressed as a u8) and a line limit. The `Blade` class can be used as a `Read` to get the actual data out.
 
 Example below:
 
