@@ -252,6 +252,55 @@ pub struct Blade {
 }
 
 
+/// Takes either a line (sub vector) or part of a line (if `return_buf` is too
+/// small) from `src_buffer` and moves it into `return_buf`.
+fn read_from_buffer(src_buffer: &mut Vec<Vec<u8>>, return_buf: &mut [u8]) -> Result<usize, std::io::Error> {
+    let mut count = src_buffer[0].len();
+    let mut shift = true;
+    let as_bytes = src_buffer.remove(0);
+    if return_buf.len() < as_bytes.len() {
+        count = return_buf.len();
+        shift = false;
+    }
+
+    return_buf[..count].clone_from_slice(&as_bytes[..count]);
+
+    if !shift {
+        src_buffer.insert(0, as_bytes[count..].to_vec());
+    }
+
+    Result::Ok(count)
+}
+
+
+#[test]
+fn test_read_from_buffer_full_line() {
+    let mut return_buffer = [0; 4];
+    let mut src_buffer = vec![vec![1, 2, 3, 4], vec![5, 6, 7, 8], vec![9]];
+    assert_eq!(
+        read_from_buffer(&mut src_buffer, &mut return_buffer).unwrap_or_default(),
+        4
+    );
+    println!("{:?}", return_buffer);
+    assert_eq!(return_buffer, [1, 2, 3, 4]);
+    assert_eq!(src_buffer, vec![vec![5, 6, 7, 8], vec![9]]);
+}
+
+
+#[test]
+fn test_read_from_buffer_partial_line() {
+    let mut return_buffer = [0; 8];
+    let mut src_buffer = vec![vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]];
+    assert_eq!(
+        read_from_buffer(&mut src_buffer, &mut return_buffer).unwrap_or_default(),
+        8
+    );
+    println!("{:?}", return_buffer);
+    assert_eq!(return_buffer, [1, 2, 3, 4, 5, 6, 7, 8]);
+    assert_eq!(src_buffer, vec![vec![9, 10, 11, 12, 13, 14]]);
+}
+
+
 impl Blade {
 
     fn prepare(&mut self) -> Result<usize, std::io::Error> {
@@ -312,25 +361,6 @@ impl Blade {
     }
 
 
-    fn read_from_buffer(&mut self, return_buf: &mut [u8]) -> Result<usize, std::io::Error> {
-        let mut count = self.buffer[0].len();
-        let mut shift = true;
-        let as_bytes = self.buffer.remove(0);
-        if return_buf.len() < as_bytes.len() {
-            count = return_buf.len();
-            shift = false;
-        }
-
-        return_buf[..count].clone_from_slice(&as_bytes[..count]);
-
-        if !shift {
-            self.buffer.insert(0, as_bytes[count..].to_vec());
-        }
-
-        Result::Ok(count)
-    }
-
-
     pub fn new(reader: Box<Read>, field_seperator: u8, consider_lines: usize) -> Blade {
         Blade {
             rdr: reader,
@@ -369,7 +399,7 @@ impl Read for Blade {
             return self.read_rest(return_buf);
         }
 
-        self.read_from_buffer(return_buf)
+        read_from_buffer(&mut self.buffer, return_buf)
 
     }
 
