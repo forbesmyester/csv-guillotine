@@ -242,11 +242,13 @@ fn test_count_seperators() {
 }
 
 
+type Buffer = Vec<Vec<u8>>;
+
 pub struct Blade {
     rdr: Box<Read>,
     field_seperator: u8,
-    buffer: Vec<Vec<u8>>,
-    unprocessed: Vec<u8>,
+    buffer: Buffer,
+    unprocessed: Buffer,
     prepared: bool,
     consider_lines: usize,
 }
@@ -254,10 +256,11 @@ pub struct Blade {
 
 /// Takes either a line (sub vector) or part of a line (if `return_buf` is too
 /// small) from `src_buffer` and moves it into `return_buf`.
-fn read_from_buffer(src_buffer: &mut Vec<Vec<u8>>, return_buf: &mut [u8]) -> Result<usize, std::io::Error> {
+fn read_from_buffer(src_buffer: &mut Buffer, return_buf: &mut [u8]) -> Result<usize, std::io::Error> {
     let mut count = src_buffer[0].len();
     let mut shift = true;
     let as_bytes = src_buffer.remove(0);
+
     if return_buf.len() < as_bytes.len() {
         count = return_buf.len();
         shift = false;
@@ -323,7 +326,7 @@ impl Blade {
                 }
             }
             for i in 0..read_buffer.len() {
-                self.unprocessed.push(read_buffer[i]);
+                self.unprocessed.push(vec![read_buffer[i]]);
             }
         }
 
@@ -375,11 +378,7 @@ impl Blade {
     fn read_rest(&mut self, return_buf: &mut [u8]) -> Result<usize, std::io::Error> {
         let length = self.unprocessed.len();
         if length > 0 {
-            for i in 0..self.unprocessed.len() {
-                return_buf[i] = self.unprocessed[i];
-            }
-            self.unprocessed.clear();
-            return Result::Ok(length);
+            return read_from_buffer(&mut self.unprocessed, return_buf);
         }
         self.rdr.read(return_buf)
     }
