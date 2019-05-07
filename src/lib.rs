@@ -10,15 +10,24 @@ use std::io::BufReader;
 pub struct FakeCsvReader {
     src: String,
     pos: usize,
+    max_read: Option<usize>,
 }
 
 
 #[cfg(test)]
 impl FakeCsvReader {
+    pub fn new_by_size(strng: String, size: usize) -> FakeCsvReader {
+        return FakeCsvReader {
+            src: strng,
+            pos: 0,
+            max_read: Option::Some(size),
+        }
+    }
     pub fn new(strng: String) -> FakeCsvReader {
         return FakeCsvReader {
             src: strng,
             pos: 0,
+            max_read: Option::None,
         }
     }
 }
@@ -34,6 +43,11 @@ impl Read for FakeCsvReader {
         if to_read > buf.len() {
             to_read = buf.len();
         }
+
+        if to_read > self.max_read.unwrap_or(to_read) {
+            to_read = self.max_read.unwrap_or(to_read);
+        }
+
         if to_read == 0 {
             return Result::Ok(0);
         }
@@ -257,6 +271,9 @@ pub struct Blade {
 /// Takes either a line (sub vector) or part of a line (if `return_buf` is too
 /// small) from `src_buffer` and moves it into `return_buf`.
 fn read_from_buffer(src_buffer: &mut Buffer, return_buf: &mut [u8]) -> Result<usize, std::io::Error> {
+    if src_buffer.len() == 0 {
+        return Result::Ok(0);
+    }
     let mut count = src_buffer[0].len();
     let mut shift = true;
     let as_bytes = src_buffer.remove(0);
@@ -273,6 +290,21 @@ fn read_from_buffer(src_buffer: &mut Buffer, return_buf: &mut [u8]) -> Result<us
     }
 
     Result::Ok(count)
+}
+
+
+#[test]
+fn test_read_from_buffer_empty() {
+    let mut return_buffer = [0; 4];
+    let mut src_buffer: Buffer = vec![vec![]];
+    let expected: Buffer = vec![];
+    assert_eq!(
+        read_from_buffer(&mut src_buffer, &mut return_buffer).unwrap_or_default(),
+        0
+    );
+    println!("{:?}", return_buffer);
+    assert_eq!(return_buffer, [0; 4]);
+    assert_eq!(src_buffer, expected);
 }
 
 
@@ -304,31 +336,78 @@ fn test_read_from_buffer_partial_line() {
 }
 
 
+/// Reads `consider_lines` from `rdr` putting them into `process_buffer`. Any
+/// left over lines will be put in `unprocessed`.
+fn prepare_fill(consider_lines: usize, rdr: &mut Box<std::io::Read>, process_buffer: &mut Buffer, unprocessed: &mut Buffer) -> Result<(), std::io::Error> {
+    let mut did_read = true;
+
+    let mut read_buffer = vec![];
+
+    while (process_buffer.len() < consider_lines) && did_read {
+        fill(rdr, &mut read_buffer)?;
+        println!(">>> {:?}", read_buffer);
+        let mut added_length = 9;
+        did_read = false;
+        while (process_buffer.len() < consider_lines) && added_length > 0 {
+            let line = get_line(&mut read_buffer);
+            added_length = line.len();
+            if added_length > 0 {
+                process_buffer.push(line);
+                did_read = true;
+            }
+        }
+    }
+
+    let mut unproc = vec![];
+    for i in 0..read_buffer.len() {
+        unproc.push(read_buffer[i]);
+    }
+
+    unprocessed.push(unproc);
+
+    Result::Ok(())
+
+}
+
+
+#[test]
+fn test_prepare_fill_needs_multiple_reads() {
+    let csv = vec![
+        "01234".to_string(),
+        "56789".to_string(),
+        "abcde".to_string(),
+        "defgh".to_string(),
+    ];
+    let fr = FakeCsvReader::new_by_size(csv.join("\n"), 7);
+    let mut b: Box<std::io::Read> = Box::new(fr);
+    
+    let mut return_buffer: Buffer = vec![];
+    let mut unprocessed: Buffer = vec![];
+    assert_eq!(
+        prepare_fill(2, &mut b, &mut return_buffer, &mut unprocessed).unwrap(),
+        ()
+    );
+
+    let expected: Buffer = vec![
+        vec![48, 49, 50, 51, 52, 10],
+        vec![53, 54, 55, 56, 57, 10]
+    ];
+    println!("{:?}", return_buffer);
+    assert_eq!(return_buffer, expected);
+    assert_eq!(unprocessed, vec![vec![97, 98]]);
+}
+
+
 impl Blade {
 
     fn prepare(&mut self) -> Result<usize, std::io::Error> {
 
         let mut process_buffer = vec![];
+        let mut unprocessed = vec![];
 
-        let mut did_read = true;
+        prepare_fill(self.consider_lines, &mut self.rdr, &mut process_buffer, &mut unprocessed)?;
 
-        while (process_buffer.len() < self.consider_lines) && did_read {
-            let mut read_buffer = vec![];
-            fill(&mut self.rdr, &mut read_buffer)?;
-            let mut added_length = 9;
-            did_read = false;
-            while (process_buffer.len() < self.consider_lines) && added_length > 0 {
-                let line = get_line(&mut read_buffer);
-                added_length = line.len();
-                if added_length > 0 {
-                    process_buffer.push(line);
-                    did_read = true;
-                }
-            }
-            for i in 0..read_buffer.len() {
-                self.unprocessed.push(vec![read_buffer[i]]);
-            }
-        }
+        self.unprocessed = unprocessed;
 
         let max = (&process_buffer).iter().fold(
             BufferAcc { count: 0, current_line: 0, max_line: 0 },
