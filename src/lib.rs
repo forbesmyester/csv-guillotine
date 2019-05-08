@@ -142,14 +142,17 @@ fn test_has_nl() {
 }
 
 
-fn fill(rdr: &mut Box<std::io::Read>, v: &mut Vec<u8>) -> Result<(), std::io::Error> {
-    let mut bytes_read = 999;
-    while (bytes_read > 0) && (!has_nl(&v)) {
-        let mut bytes = [0; 1024];
-        bytes_read = rdr.read(&mut bytes)?;
-        for i in 0..bytes_read {
-            v.push(bytes[i]);
-        }
+/// Writes bytes to `rdr` to `v`, however it will keep doing this until at least
+/// one new line is found.
+fn fill(rdr: &mut std::io::Read, v: &mut Vec<u8>) -> Result<(), std::io::Error> {
+    let mut number_of_bytes_read = 999;
+    while (number_of_bytes_read > 0) && (!has_nl(&v)) {
+        #[cfg(test)]
+        let mut bytes = [0; 8];
+        #[cfg(not(test))]
+        let mut bytes = [0; 8192];
+        number_of_bytes_read = rdr.read(&mut bytes)?;
+        v.append(&mut bytes[0..number_of_bytes_read].to_vec());
     }
     Result::Ok(())
 }
@@ -158,22 +161,19 @@ fn fill(rdr: &mut Box<std::io::Read>, v: &mut Vec<u8>) -> Result<(), std::io::Er
 #[test]
 fn test_fill() {
     let csv = vec![
-        "Full of nonsense, rubbish and problems".to_string(),
+        "full of trash".to_string(),
         "but before the real data".to_string(),
-        "name,age,gender".to_string(),
-        "bob,22,M".to_string(),
-        "jane,21,F".to_string(),
-        "freddy,19,M".to_string()
+        "a".to_string(),
     ];
     let mut fr: Box<Read> = Box::new(FakeCsvReader::new(csv.join("\n")));
-    let mut unprocessed = "This is a header".to_string().as_bytes().to_vec();
+    let mut unprocessed = "This is a header ".to_string().as_bytes().to_vec();
     fill(&mut fr, &mut unprocessed).unwrap();
     let mut fr_buffer = String::new();
     fr.read_to_string(&mut fr_buffer).unwrap();
-    assert_eq!(fr_buffer, "");
+    assert_eq!(fr_buffer, "t before the real data\na");
     assert_eq!(
         unprocessed,
-        ("This is a header".to_string() + &csv.join("\n")).as_bytes()
+        "This is a header full of trash\nbu".to_string().as_bytes()
     );
 }
 
