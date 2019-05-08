@@ -109,13 +109,13 @@ fn is_nl(c: u8) -> bool {
 }
 
 
-fn has_nl(input: &Vec<u8>) -> bool {
+fn has_nl(input: &[u8]) -> bool {
     let mut last: u8 = 0;
-    for i in 0..input.len() {
+    for inp in input {
         if is_nl(last) {
             return true;
         }
-        last = input[i];
+        last = *inp;
     }
     false
 }
@@ -230,12 +230,12 @@ fn test_get_line() {
 }
 
 
-fn count_seperators(field_seperator: u8, line: &Vec<u8>) -> usize {
+fn count_seperators(field_seperator: u8, line: &[u8]) -> usize {
 
     let mut rdr = ReaderBuilder::new()
         .delimiter(field_seperator)
         .has_headers(false)
-        .from_reader(line.as_slice());
+        .from_reader(line);
 
     match rdr.byte_records().next() {
         Some(rec) => {
@@ -271,7 +271,7 @@ pub struct Blade {
 /// Takes either a line (sub vector) or part of a line (if `return_buf` is too
 /// small) from `src_buffer` and moves it into `return_buf`.
 fn read_from_buffer(src_buffer: &mut Buffer, return_buf: &mut [u8]) -> Result<usize, std::io::Error> {
-    if src_buffer.len() == 0 {
+    if src_buffer.is_empty() {
         return Result::Ok(0);
     }
     let mut count = src_buffer[0].len();
@@ -302,7 +302,6 @@ fn test_read_from_buffer_empty() {
         read_from_buffer(&mut src_buffer, &mut return_buffer).unwrap_or_default(),
         0
     );
-    println!("{:?}", return_buffer);
     assert_eq!(return_buffer, [0; 4]);
     assert_eq!(src_buffer, expected);
 }
@@ -316,7 +315,6 @@ fn test_read_from_buffer_full_line() {
         read_from_buffer(&mut src_buffer, &mut return_buffer).unwrap_or_default(),
         4
     );
-    println!("{:?}", return_buffer);
     assert_eq!(return_buffer, [1, 2, 3, 4]);
     assert_eq!(src_buffer, vec![vec![5, 6, 7, 8], vec![9]]);
 }
@@ -330,7 +328,6 @@ fn test_read_from_buffer_partial_line() {
         read_from_buffer(&mut src_buffer, &mut return_buffer).unwrap_or_default(),
         8
     );
-    println!("{:?}", return_buffer);
     assert_eq!(return_buffer, [1, 2, 3, 4, 5, 6, 7, 8]);
     assert_eq!(src_buffer, vec![vec![9, 10, 11, 12, 13, 14]]);
 }
@@ -338,14 +335,13 @@ fn test_read_from_buffer_partial_line() {
 
 /// Reads `consider_lines` from `rdr` putting them into `process_buffer`. Any
 /// left over lines will be put in `unprocessed`.
-fn prepare_fill(consider_lines: usize, rdr: &mut Box<std::io::Read>, process_buffer: &mut Buffer, unprocessed: &mut Buffer) -> Result<(), std::io::Error> {
+fn prepare_fill(consider_lines: usize, rdr: &mut std::io::Read, process_buffer: &mut Buffer, unprocessed: &mut Buffer) -> Result<(), std::io::Error> {
     let mut did_read = true;
 
     let mut read_buffer = vec![];
 
     while (process_buffer.len() < consider_lines) && did_read {
         fill(rdr, &mut read_buffer)?;
-        println!(">>> {:?}", read_buffer);
         let mut added_length = 9;
         did_read = false;
         while (process_buffer.len() < consider_lines) && added_length > 0 {
@@ -359,8 +355,8 @@ fn prepare_fill(consider_lines: usize, rdr: &mut Box<std::io::Read>, process_buf
     }
 
     let mut unproc = vec![];
-    for i in 0..read_buffer.len() {
-        unproc.push(read_buffer[i]);
+    for r in read_buffer {
+        unproc.push(r);
     }
 
     unprocessed.push(unproc);
@@ -392,7 +388,6 @@ fn test_prepare_fill_needs_multiple_reads() {
         vec![48, 49, 50, 51, 52, 10],
         vec![53, 54, 55, 56, 57, 10]
     ];
-    println!("{:?}", return_buffer);
     assert_eq!(return_buffer, expected);
     assert_eq!(unprocessed, vec![vec![97, 98]]);
 }
@@ -416,23 +411,18 @@ impl Blade {
                     self.field_seperator,
                     line
                 );
-                // println!("> {:?}", c);
                 if c <= acc.count {
                     let r = BufferAcc { current_line: acc.current_line + 1, ..acc };
-                    // println!("{:?}", r);
                     return r;
                 }
-                let r = BufferAcc {
+
+                BufferAcc {
                     count: c,
                     current_line: acc.current_line + 1,
                     max_line: acc.current_line
-                };
-                // println!("{:?}", r);
-                r
+                }
             }
         );
-
-        // println!("{:?}", max);
 
         while process_buffer.len() > max.max_line {
             self.buffer.push(process_buffer.remove(max.max_line).to_vec());

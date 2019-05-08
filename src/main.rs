@@ -5,9 +5,6 @@ use std::fs::File;
 mod lib;
 use argparse::{ArgumentParser, Store, StoreOption};
 
-#[cfg(test)]
-use std::io::BufRead;
-
 fn main() {
 
     let mut args_separator = ",".to_string();
