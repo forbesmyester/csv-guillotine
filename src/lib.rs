@@ -183,11 +183,10 @@ fn get_line(unprocessed: &mut Vec<u8>) -> Vec<u8> {
     let get_byte_count = || {
         let i = 0;
         for i in 1..unprocessed.len() {
-            if is_nl(unprocessed[i - 1]) {
-                if is_nl(unprocessed[i]) {
-                    return i + 1;
-                }
-                return i;
+            match (is_nl(unprocessed[i - 1]), is_nl(unprocessed[i])) {
+                (true, true) => return i + 1,
+                (true, false) => return i,
+                (false, _) => {}
             }
         }
         i
@@ -196,7 +195,7 @@ fn get_line(unprocessed: &mut Vec<u8>) -> Vec<u8> {
     let byte_count = get_byte_count();
 
     let r = unprocessed[..byte_count].to_vec();
-    unprocessed.drain(0..byte_count);
+    unprocessed.drain(..byte_count);
     r
 
 }
@@ -271,9 +270,11 @@ pub struct Blade {
 /// Takes either a line (sub vector) or part of a line (if `return_buf` is too
 /// small) from `src_buffer` and moves it into `return_buf`.
 fn read_from_buffer(src_buffer: &mut Buffer, return_buf: &mut [u8]) -> Result<usize, std::io::Error> {
+
     if src_buffer.is_empty() {
         return Result::Ok(0);
     }
+
     let mut count = src_buffer[0].len();
     let mut shift = true;
     let as_bytes = src_buffer.remove(0);
@@ -376,7 +377,7 @@ fn test_prepare_fill_needs_multiple_reads() {
     ];
     let fr = FakeCsvReader::new_by_size(csv.join("\n"), 7);
     let mut b: Box<std::io::Read> = Box::new(fr);
-    
+
     let mut return_buffer: Buffer = vec![];
     let mut unprocessed: Buffer = vec![];
     assert_eq!(
