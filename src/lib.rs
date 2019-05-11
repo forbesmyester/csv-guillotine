@@ -7,7 +7,7 @@ use csv::ReaderBuilder;
 use std::io::BufReader;
 
 #[cfg(test)]
-pub struct FakeCsvReader {
+struct FakeCsvReader {
     src: String,
     pos: usize,
     max_read: Option<usize>,

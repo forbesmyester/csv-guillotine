@@ -1,9 +1,10 @@
 extern crate argparse;
+extern crate csv_guillotine;
 use std::io::Write;
 use std::io::{Read, BufReader};
 use std::fs::File;
-mod lib;
 use argparse::{ArgumentParser, Store, StoreOption};
+use csv_guillotine::Blade;
 
 fn main() {
 
@@ -71,8 +72,7 @@ fn main() {
         }
     };
 
-    let mut rdr = lib::Blade::new(stdin, separator, consider);
-    // let mut buf_reader = BufReader::new(blade);
+    let mut rdr = Blade::new(stdin, separator, consider);
 
     let mut exit_code = 0;
     let mut read_size = 1;
