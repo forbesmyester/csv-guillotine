@@ -1,9 +1,13 @@
 [package]
 name = "csv-guillotine"
 description = "CSV's often have metadata at top before data headers. This removes it."
-repository = "https://github.com/forbesmyester/csv-guillotine"
 license = "MIT"
-version = "0.3.2"
+version = "0.3.3"
+readme = "README.md"
+keywords = ["csv", "tsv", "slice", "command"]
+homepage = "https://github.com/forbesmyester/csv-guillotine"
+repository = "https://github.com/forbesmyester/csv-guillotine"
+documentation = "https://github.com/forbesmyester/csv-guillotine"
 authors = ["Matthew Forrester <matthew.forrester@speechmarks.com>"]
 edition = "2018"
 

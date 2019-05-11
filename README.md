@@ -90,3 +90,4 @@ Example below:
  * 0.3.0 - Use bytes instead of String for everything so it can process non UTF8 files.
  * 0.3.1 - Improve test coverage and fix bugs.
  * 0.3.2 - More normal project layout and nicer code.
+ * 0.3.3 - More normal project layout and nicer code.
