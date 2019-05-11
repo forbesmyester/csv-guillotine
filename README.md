@@ -55,13 +55,14 @@ This library exposes a `Blade` class which is constructed with a [`Read`](https:
 Example below:
 
 ```rust
+    extern crate csv_guillotine;
     use std::io::{BufRead, BufReader};
-    mod lib;
+    use csv_guillotine::Blade;
 
     fn main() {
 
         let stdin = std::io::stdin();
-        let blade = lib::Blade::new(stdin, 44, 20);
+        let blade = Blade::new(stdin, 44, 20);
         let mut buf_reader = BufReader::new(blade);
 
         let mut read_size = 1;
@@ -87,3 +88,5 @@ Example below:
  * 0.1.1 - Rename main class to Blade to keep with the guillotine theme
  * 0.2.0 - Add a command line program
  * 0.3.0 - Use bytes instead of String for everything so it can process non UTF8 files.
+ * 0.3.1 - Improve test coverage and fix bugs.
+ * 0.3.2 - More normal project layout and nicer code.
