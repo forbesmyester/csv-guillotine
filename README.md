@@ -84,10 +84,11 @@ Example below:
 
 ## Versions
 
- * 0.1.0 - Initial version
- * 0.1.1 - Rename main class to Blade to keep with the guillotine theme
- * 0.2.0 - Add a command line program
- * 0.3.0 - Use bytes instead of String for everything so it can process non UTF8 files.
- * 0.3.1 - Improve test coverage and fix bugs.
- * 0.3.2 - More normal project layout and nicer code.
+ * 0.3.4 - Convert Blade (lib.rs) to Blade<Read> (a generic) instead of using a Box<Read> field internally.
  * 0.3.3 - More normal project layout and nicer code.
+ * 0.3.2 - More normal project layout and nicer code.
+ * 0.3.1 - Improve test coverage and fix bugs.
+ * 0.3.0 - Use bytes instead of String for everything so it can process non UTF8 files.
+ * 0.2.0 - Add a command line program
+ * 0.1.1 - Rename main class to Blade to keep with the guillotine theme
+ * 0.1.0 - Initial version

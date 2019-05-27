@@ -142,9 +142,9 @@ fn test_has_nl() {
 }
 
 
-/// Writes bytes to `rdr` to `v`, however it will keep doing this until at least
+/// Writes bytes from `rdr` to `v`, however it will keep doing this until at least
 /// one new line is found.
-fn fill(rdr: &mut std::io::Read, v: &mut Vec<u8>) -> Result<(), std::io::Error> {
+fn fill<R>(mut rdr: R, v: &mut Vec<u8>) -> Result<(), std::io::Error> where R: Read {
     let mut number_of_bytes_read = 999;
     while (number_of_bytes_read > 0) && (!has_nl(&v)) {
         #[cfg(test)]
@@ -165,7 +165,7 @@ fn test_fill() {
         "but before the real data".to_string(),
         "a".to_string(),
     ];
-    let mut fr: Box<Read> = Box::new(FakeCsvReader::new(csv.join("\n")));
+    let mut fr = FakeCsvReader::new(csv.join("\n"));
     let mut unprocessed = "This is a header ".to_string().as_bytes().to_vec();
     fill(&mut fr, &mut unprocessed).unwrap();
     let mut fr_buffer = String::new();
@@ -257,8 +257,8 @@ fn test_count_seperators() {
 
 type Buffer = Vec<Vec<u8>>;
 
-pub struct Blade {
-    rdr: Box<Read>,
+pub struct Blade<R: Read> {
+    rdr: R,
     field_seperator: u8,
     buffer: Buffer,
     unprocessed: Buffer,
@@ -336,13 +336,13 @@ fn test_read_from_buffer_partial_line() {
 
 /// Reads `consider_lines` from `rdr` putting them into `process_buffer`. Any
 /// left over lines will be put in `unprocessed`.
-fn prepare_fill(consider_lines: usize, rdr: &mut std::io::Read, process_buffer: &mut Buffer, unprocessed: &mut Buffer) -> Result<(), std::io::Error> {
+fn prepare_fill<R>(consider_lines: usize, mut rdr: R, process_buffer: &mut Buffer, unprocessed: &mut Buffer) -> Result<(), std::io::Error> where R: Read {
     let mut did_read = true;
 
     let mut read_buffer = vec![];
 
     while (process_buffer.len() < consider_lines) && did_read {
-        fill(rdr, &mut read_buffer)?;
+        fill(&mut rdr, &mut read_buffer)?;
         let mut added_length = 9;
         did_read = false;
         while (process_buffer.len() < consider_lines) && added_length > 0 {
@@ -376,12 +376,11 @@ fn test_prepare_fill_needs_multiple_reads() {
         "defgh".to_string(),
     ];
     let fr = FakeCsvReader::new_by_size(csv.join("\n"), 7);
-    let mut b: Box<std::io::Read> = Box::new(fr);
 
     let mut return_buffer: Buffer = vec![];
     let mut unprocessed: Buffer = vec![];
     assert_eq!(
-        prepare_fill(2, &mut b, &mut return_buffer, &mut unprocessed).unwrap(),
+        prepare_fill(2, fr, &mut return_buffer, &mut unprocessed).unwrap(),
         ()
     );
 
@@ -394,7 +393,7 @@ fn test_prepare_fill_needs_multiple_reads() {
 }
 
 
-impl Blade {
+impl<R> Blade<R> where R: Read {
 
     fn prepare(&mut self) -> Result<usize, std::io::Error> {
 
@@ -434,7 +433,7 @@ impl Blade {
     }
 
 
-    pub fn new(reader: Box<Read>, field_seperator: u8, consider_lines: usize) -> Blade {
+    pub fn new(reader: R, field_seperator: u8, consider_lines: usize) -> Blade<R> {
         Blade {
             rdr: reader,
             field_seperator,
@@ -455,7 +454,7 @@ impl Blade {
 }
 
 
-impl Read for Blade {
+impl<R> Read for Blade<R> where R: Read {
 
     fn read(&mut self, return_buf: &mut [u8]) -> Result<usize, std::io::Error> {
 
@@ -488,7 +487,7 @@ fn it_skips_header() {
         "freddy,19,M".to_string()
     ];
     let fr = FakeCsvReader::new(csv.join("\n"));
-    let rf = Blade::new(Box::new(fr), 44, 20);
+    let rf = Blade::new(fr, 44, 20);
     let mut br = BufReader::new(rf);
     let mut buffer = String::new();
 
@@ -515,7 +514,7 @@ fn it_only_considers_upto_considers() {
         "freddy,19,M".to_string()
     ];
     let fr = FakeCsvReader::new(csv.join("\n"));
-    let rf = Blade::new(Box::new(fr), 44, 3);
+    let rf = Blade::new(fr, 44, 3);
     let mut br = BufReader::new(rf);
     let mut buffer = String::new();
 
