@@ -84,6 +84,7 @@ Example below:
 
 ## Versions
 
+ * 0.3.5 - Allow tab seperated CSV files (AKA TSV) in binary.
  * 0.3.4 - Convert Blade (lib.rs) to Blade<Read> (a generic) instead of using a Box<Read> field internally.
  * 0.3.3 - More normal project layout and nicer code.
  * 0.3.2 - More normal project layout and nicer code.

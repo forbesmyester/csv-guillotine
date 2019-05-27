@@ -2,7 +2,7 @@
 name = "csv-guillotine"
 description = "CSV's often have metadata at top before data headers. This removes it."
 license = "MIT"
-version = "0.3.4"
+version = "0.3.5"
 readme = "README.md"
 keywords = ["csv", "tsv", "slice", "command"]
 homepage = "https://github.com/forbesmyester/csv-guillotine"

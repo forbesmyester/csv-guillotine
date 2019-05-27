@@ -40,7 +40,10 @@ fn main() {
         ap.parse_args_or_exit();
     }
 
-    let separator = args_separator.as_bytes()[0];
+    let separator = match args_separator {
+        ref x if x == "\\t" => 9,
+        x => x.as_bytes()[0],
+    };
 
     let stdin: Box<Read> = match args_input {
         Some(p) => {
