@@ -17,9 +17,8 @@ phases:
       - cargo test
   build:
     commands:
+      - cargo build
       - cargo build --release
-      - echo Build started on `date`
-      - mvn install
     finally:
       - echo This always runs even if the install command fails
   post_build:
