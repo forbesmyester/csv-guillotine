@@ -1,0 +1,34 @@
+version: 0.2
+
+env:
+  # variables:
+  #   JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
+  # parameter-store:
+  #   LOGIN_PASSWORD: /CodeBuild/dockerLoginPassword
+
+phases:
+  install:
+    commands:
+      - echo Entered the install phase...
+      - cargo install
+    finally:
+      - echo This always runs even if the update or install command fails 
+  test:
+    commands:
+      - cargo test
+  build:
+    commands:
+      - cargo build --release
+      - echo Build started on `date`
+      - mvn install
+    finally:
+      - echo This always runs even if the install command fails
+  post_build:
+    commands:
+      - ./target/release/csv-guillotine -i res/test/sample.csv -o _processed.csv
+      - diff res/test/expected.csv _processed.csv
+artifacts:
+  files:
+    - target/release/csv-guillotine
+    - target/debug/csv-guillotine
+  discard-paths: no
