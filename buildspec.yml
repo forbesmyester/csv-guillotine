@@ -10,9 +10,8 @@ phases:
   install:
     commands:
       - echo Entered the install phase...
-      - cargo install
     finally:
-      - echo This always runs even if the update or install command fails 
+      - echo Did nothing!
   pre_build:
     commands:
       - cargo test
