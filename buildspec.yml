@@ -13,7 +13,7 @@ phases:
       - cargo install
     finally:
       - echo This always runs even if the update or install command fails 
-  test:
+  pre_build:
     commands:
       - cargo test
   build:
